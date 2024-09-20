@@ -1,0 +1,14 @@
+{
+	"name": "fal.ai server",
+	"module": "src/server.ts",
+	"type": "module",
+	"scripts": {
+		"server": "cd src;bun server.ts"
+	},
+	"dependencies": {
+		"@fal-ai/serverless-client": "^0.14.2"
+	},
+	"devDependencies": {
+		"@types/bun": "^1.1.9"
+	}
+}
