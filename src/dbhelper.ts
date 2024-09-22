@@ -10,6 +10,7 @@ export default class dbHelper {
 			email TEXT NOT NULL,
 			password TEXT NOT NULL,
 			creation NUMERIC,
+			token TEXT,
 			credits INTEGER);`;
 
 			db.run(query)
@@ -53,8 +54,8 @@ export default class dbHelper {
 
 	static createUser = async(db: Database, data: Omit<User, "id">) => {
 		const query = `INSERT INTO users 
-			(email, password, creation, credits) 
-			VALUES(?, ?, ?, ?);`;
+			(email, password, creation, token, credits) 
+			VALUES(?, ?, ?, ?, ?);`;
 
 		data.password = await Bun.password.hash(data.password)
 	
@@ -62,6 +63,7 @@ export default class dbHelper {
 			data.email, 
 			data.password, 
 			data.creation ? data.creation.toISOString() : null, 
+			data.token,
 			data.credits
 		)
 	}
@@ -74,5 +76,17 @@ export default class dbHelper {
 		}
 		return false
 	}
-}
 
+	static updateUserToken = (db: Database, token: string, email: string) => {
+		db.prepare(`UPDATE users SET token = ? WHERE email = ?;`).run(token, email)
+	}
+	
+	static tokenExists = (db: Database, token: string): boolean => {
+		try {
+			const count = db.query(`SELECT * FROM users WHERE token like ?;`).all(token).length
+			return count > 0;
+		} catch (e) {
+			return false
+		}
+	}
+}

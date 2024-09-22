@@ -12,8 +12,7 @@ fal.config({
 
 //--[ Init database ]----------------------------------------------------------
 
-const databaseFile: string = "server.sqlite"
-const db = new Database(databaseFile, { create: true })
+const db = new Database("server.sqlite", { create: true })
 
 const initDb = async () => {
     if (!dbHelper.tableExists(db, "users")) {
@@ -21,15 +20,16 @@ const initDb = async () => {
         dbHelper.createTable(db)
     }
 
-	if (!dbHelper.userExists(db, "hazlema@gmail.com")) {
-		console.log("creating tets user...")
-		await dbHelper.createUser(db, {
-			email: "hazlema@gmail.com",
-			password: "Kelly862004!",
-			creation: new Date(),
-			credits: 100000,
-		})
-	}
+    if (!dbHelper.userExists(db, "hazlema@gmail.com")) {
+        console.log("creating test user...")
+        await dbHelper.createUser(db, {
+            email: "hazlema@gmail.com",
+            password: "Kelly862004!",
+            creation: new Date(),
+            token: null,
+            credits: 100000,
+        })
+    }
 }
 
 //--[ Handle image generations ]-----------------------------------------------
@@ -73,42 +73,69 @@ const serveHTML = async (htmlPath: string): Promise<Response> => {
     return new Response("File not found", { status: 404 })
 }
 
+//--[ Check req for a token ]--------------------------------------------------
+
+const checkToken = (req: Request): boolean => {
+    const cookieHeader = req.headers.get("Cookie")
+
+    if (cookieHeader) {
+        const cookies = Object.fromEntries(cookieHeader.split("; ").map((cookie) => cookie.split("=")))
+        if (cookies && Object.keys(cookies).includes("token")) {
+            if (dbHelper.tokenExists(db, cookies.token)) {
+                return true
+            }
+        }
+        return false
+    }
+    return false
+}
+
 //--[ Start the server ]-------------------------------------------------------
 
 await initDb()
 
 const server = Bun.serve({
-    hostname: "localhost",
-    port: 3000,
+    hostname: Bun.env.HOSTNAME || "localhost",
+    port: Bun.env.PORT || 3000,
 
     async fetch(req: Request) {
         const route = new Route(req.url)
         const router: RouteResult = route.route()
         const command: string = `${req.method} ${router.url}`
 
-        //--[ Handle login ]---------------------------------------------------
+        //--[ If they are all ready authenticated redirect to app ]------------
+
+		if (command == "GET public/index.html") {
+			if (checkToken(req)) {
+				return Response.redirect("/app")
+			}
+		}
 		
+        //--[ Handle login ]---------------------------------------------------
+
         if (command == "POST login/index.html") {
             const form: credentials = await req.json()
-            
-			if (await dbHelper.validateUser(db, form) === true) {   
-				const headers = new Headers();
-				
-				// Set the cookie
-				headers.set("Content-Type", "application/json");
-				headers.append("Set-Cookie", "myCookie=cookieValue; Max-Age=900000; HttpOnly");
-				
-				console.log(`Auth request: ${form.email} -- Approved`)
-				return new Response(JSON.stringify({ text: "success" }), { status: 200, headers: headers })
+
+            if ((await dbHelper.validateUser(db, form)) === true) {
+                let token = crypto.randomUUID() + "-" + crypto.randomUUID() + "-" + crypto.randomUUID()
+                dbHelper.updateUserToken(db, token, form.email)
+
+                // Set the cookie, expires in 24 hours
+                const headers = new Headers()
+                headers.set("Content-Type", "application/json")
+                headers.append("Set-Cookie", `token=${token}; Max-Age=86400;`)
+
+                console.log(`Auth request: ${form.email} -- Approved`)
+                return new Response(JSON.stringify({ text: "success" }), { status: 200, headers: headers })
             }
 
-			console.log(`Auth request: ${form.email} -- Failed`)
+            console.log(`Auth request: ${form.email} -- Failed`)
             return new Response(JSON.stringify({ text: "fail" }), { status: 200, headers: { "Content-Type": "application/json" } })
         }
 
         //--[ Handle Image Generations ]---------------------------------------
 
-		if (command == "POST data/index.html") {
+        if (command == "POST data/index.html") {
             const form: ImageGenerationParams = await req.json()
             console.log(form)
 
@@ -118,11 +145,20 @@ const server = Bun.serve({
 
         //--[ Handle Web Pages ]-----------------------------------------------
 
-		const htmlResponse = await serveHTML(router.path)
+        const htmlResponse = await serveHTML(router.path)
 
         if (htmlResponse.status === 404) {
-            return Response.redirect("/")
+            return Response.redirect("/404.html")
         }
+
+        // check for token on this privileged path
+        if (router.route == "app") {
+            if (checkToken(req)) {
+            	return htmlResponse
+			}
+			return Response.redirect("/expired.html")
+		}
+
         return htmlResponse
     },
 })
@@ -132,7 +168,6 @@ const server = Bun.serve({
 console.log()
 console.log(`Server running on ${server.url}`)
 console.log("Press Ctrl-C to exit")
-
 
 var start = process.platform == "darwin" ? "open" : process.platform == "win32" ? "start" : "xdg-open"
 require("child_process").exec(`${start} ${server.url}`)

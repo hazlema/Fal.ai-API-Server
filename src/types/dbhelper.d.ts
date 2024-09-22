@@ -3,6 +3,7 @@ interface User {
     email: string
     password: string
     creation: Date | null
+	token: string | null
     credits: number | null
 }
 

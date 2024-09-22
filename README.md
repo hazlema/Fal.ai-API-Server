@@ -1,12 +1,21 @@
 # FAL.ai server written in bun
 Generate images with Flux-pro with this simple frontend written in Bun.
 
+## New features
+
+- SQLite database to store user info
+- Login / Authentication 
+- Create User (no email validation message yet)
+- Expired Token Page
+- 404 Page
+- If you are authenticated already it skips the login page
+- Credits
+
 ## Quick start
 
 - Just edit the `/src/.env` file and give it your key then launch the server. `bun run server`
 - The server defaults to hostname `localhost` running on port `3000`
 - You can change that by editing the file `src/server.ts'
-- Logons are not supported in this version.
 
 ![web interface](./assets/web.png)
 
