@@ -27,3 +27,10 @@ type ImageGenerationParams = {
   seed: number;
   guidance: number;
 };
+
+interface RouteResult {
+    route: string
+    file: string
+    url: string
+    path: string
+}

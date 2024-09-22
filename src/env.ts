@@ -3,7 +3,9 @@ import { createInterface } from "node:readline"
 import { Readable } from "node:stream"
 import type { BunFile } from "bun"
 
-const env = async (envPath: string = ".env"): Promise<void> => {
+//--[ Read .env files ]--------------------------------------------------------
+
+export const env = async (envPath: string = ".env"): Promise<void> => {
     const file: BunFile = Bun.file(envPath)
 
     if (file.name && (await file.exists())) {
@@ -40,5 +42,3 @@ const env = async (envPath: string = ".env"): Promise<void> => {
         }
     }
 }
-
-export default env

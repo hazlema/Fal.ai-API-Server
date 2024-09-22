@@ -1,22 +1,41 @@
-import { join } from "node:path"
+import { Database } from "bun:sqlite"
 import * as fal from "@fal-ai/serverless-client"
 import env from "./env"
+import Route from "./route"
+import dbHelper from "./dbhelper"
+
 await env()
 
 fal.config({
     credentials: Bun.env.FAL_KEY,
 })
 
-/**
- * Submits an image generation job to the Fal AI serverless client.
- *
- * @param {ImageGenerationParams} form - The parameters for the image generation job.
- * @return {string | null} The URL of the generated image, or null if the job fails.
- */
+//--[ Init database ]----------------------------------------------------------
+
+const databaseFile: string = "server.sqlite"
+const db = new Database(databaseFile, { create: true })
+
+const initDb = async () => {
+    if (!dbHelper.tableExists(db, "users")) {
+        console.log("Creating database tables")
+        dbHelper.createTable(db)
+    }
+
+	if (!dbHelper.userExists(db, "hazlema@gmail.com")) {
+		console.log("creating tets user...")
+		await dbHelper.createUser(db, {
+			email: "hazlema@gmail.com",
+			password: "Kelly862004!",
+			creation: new Date(),
+			credits: 100000,
+		})
+	}
+}
+
+//--[ Handle image generations ]-----------------------------------------------
+
 const runJob = async (form: ImageGenerationParams): Promise<string | null> => {
     try {
-        // Uncomment to use the dev version of flux
-		// const result: FalAIResponse = await fal.subscribe("fal-ai/flux/dev", {
         const result: FalAIResponse = await fal.subscribe("fal-ai/flux-pro", {
             input: {
                 prompt: form.prompt,
@@ -25,7 +44,7 @@ const runJob = async (form: ImageGenerationParams): Promise<string | null> => {
                 num_inference_steps: form.steps,
                 guidance_scale: form.guidance,
                 num_images: 1,
-				safety_tolerance: 5
+                safety_tolerance: 5,
             },
         })
 
@@ -37,69 +56,83 @@ const runJob = async (form: ImageGenerationParams): Promise<string | null> => {
     return null
 }
 
-/**
- * Serve an HTML file from the specified path.
- *
- * @param {string} path - The path of the HTML file to serve.
- * @return {Promise<Response>} A Promise that resolves to the HTTP response containing the HTML file.
- */
-const serveHTML = async (path: string): Promise<Response> => {
+//--[ Serve an HTML file ]-----------------------------------------------------
+
+const serveHTML = async (htmlPath: string): Promise<Response> => {
     try {
-		const htmlPath = join(".", "html", path);
-        const file = Bun.file(htmlPath);
+        const file = Bun.file(htmlPath)
         if (await file.exists()) {
             return new Response(file, {
                 headers: { "Content-Type": file.type },
-            });
+            })
         }
     } catch (error) {
-        console.error(`Error serving HTML file ${path}: ${error}`);
+        console.error(`Error serving HTML file ${htmlPath}: ${error}`)
     }
 
-	return new Response("File not found", { status: 404 });
-};
+    return new Response("File not found", { status: 404 })
+}
 
+//--[ Start the server ]-------------------------------------------------------
+
+await initDb()
 
 const server = Bun.serve({
-	hostname: "localhost",
+    hostname: "localhost",
     port: 3000,
 
-	/**
-	 * Handles incoming HTTP requests and returns a response.
-	 *
-	 * @param {Request} req - The incoming HTTP request.
-	 * @return {Promise<Response>} A promise resolving to the HTTP response.
-	 */
-	async fetch(req: Request ) {
-        const url = new URL(req.url);
+    async fetch(req: Request) {
+        const route = new Route(req.url)
+        const router: RouteResult = route.route()
+        const command: string = `${req.method} ${router.url}`
 
-        switch (`${req.method} ${url.pathname}`) {
-            case "GET /":
-                return await serveHTML("/form.html");
+        //--[ Handle login ]---------------------------------------------------
+		
+        if (command == "POST login/index.html") {
+            const form: credentials = await req.json()
+            
+			if (await dbHelper.validateUser(db, form) === true) {   
+				const headers = new Headers();
+				
+				// Set the cookie
+				headers.set("Content-Type", "application/json");
+				headers.append("Set-Cookie", "myCookie=cookieValue; Max-Age=900000; HttpOnly");
+				
+				console.log(`Auth request: ${form.email} -- Approved`)
+				return new Response(JSON.stringify({ text: "success" }), { status: 200, headers: headers })
+            }
 
-            case "POST /data":
-                const form: ImageGenerationParams = await req.json();
-
-				console.log(`Request from ${req.url}`);             
-				console.log(form);
-				console.log("");
-
-				const result = await runJob(form);
-
-                return new Response(
-                    JSON.stringify({ text: "success", image: result }),
-                    { status: 200, headers: { "Content-Type": "application/json" } }
-                );
-
-            default:
-                const htmlResponse = await serveHTML(url.pathname);
-                if (htmlResponse.status === 404) {
-                    return Response.redirect("/");
-                }
-                return htmlResponse;
+			console.log(`Auth request: ${form.email} -- Failed`)
+            return new Response(JSON.stringify({ text: "fail" }), { status: 200, headers: { "Content-Type": "application/json" } })
         }
-    }
-});
 
+        //--[ Handle Image Generations ]---------------------------------------
+
+		if (command == "POST data/index.html") {
+            const form: ImageGenerationParams = await req.json()
+            console.log(form)
+
+            const result = await runJob(form)
+            return new Response(JSON.stringify({ text: "success", image: result }), { status: 200, headers: { "Content-Type": "application/json" } })
+        }
+
+        //--[ Handle Web Pages ]-----------------------------------------------
+
+		const htmlResponse = await serveHTML(router.path)
+
+        if (htmlResponse.status === 404) {
+            return Response.redirect("/")
+        }
+        return htmlResponse
+    },
+})
+
+//--[ Launch a browser ]-------------------------------------------------------
+
+console.log()
 console.log(`Server running on ${server.url}`)
 console.log("Press Ctrl-C to exit")
+
+
+var start = process.platform == "darwin" ? "open" : process.platform == "win32" ? "start" : "xdg-open"
+require("child_process").exec(`${start} ${server.url}`)
