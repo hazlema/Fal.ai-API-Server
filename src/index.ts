@@ -15,6 +15,12 @@ Fal.config({
 
 const db = new Database("server.sqlite", { create: true })
 
+/**
+ * Initializes the database by creating the 'users' table if it does not exist, 
+ * and creates a test user with a predefined email and password if the user does not exist.
+ *
+ * @return {Promise<void>} A promise that resolves when the initialization is complete.
+ */
 const initDb = async () => {
     if (!DbHelper.tableExists(db, "users")) {
         console.log("Creating database tables")
@@ -33,8 +39,12 @@ const initDb = async () => {
     }
 }
 
-//--[ Handle image generations ]-----------------------------------------------
-
+/**
+ * Submits a job to the Fal AI server to generate an image based on the provided parameters.
+ *
+ * @param {ImageGenerationParams} form - The parameters for the image generation job.
+ * @return {string | null} The URL of the generated image, or null if the job fails.
+ */
 const runJob = async (form: ImageGenerationParams): Promise<string | null> => {
     try {
         const result: FalAIResponse = await Fal.subscribe("fal-ai/flux-pro", {
@@ -57,8 +67,12 @@ const runJob = async (form: ImageGenerationParams): Promise<string | null> => {
     return null
 }
 
-//--[ Serve an HTML file ]-----------------------------------------------------
-
+/**
+ * Serves an HTML file from the given path.
+ *
+ * @param {string} htmlPath - The path to the HTML file.
+ * @return {Promise<Response>} A Promise that resolves to a Response object with the HTML file content and the appropriate Content-Type header. If the file does not exist, a Response object with a "File not found" message and a status code of 404 is returned.
+ */
 const serveHTML = async (htmlPath: string): Promise<Response> => {
     try {
         const file = Bun.file(htmlPath)
@@ -74,8 +88,13 @@ const serveHTML = async (htmlPath: string): Promise<Response> => {
     return new Response("File not found", { status: 404 })
 }
 
-//--[ add/Subtract credits from a token ]--------------------------------------
-
+/**
+ * Adjusts the credits of a user based on the provided amount.
+ *
+ * @param {Request} req - The request object containing the user's token.
+ * @param {number} amount - The amount of credits to adjust.
+ * @return {boolean} True if the credits were successfully adjusted, false otherwise.
+ */
 const adjustCredits = (req: Request, amount: number): boolean => {
     const token = serve.getCookie(req, "token")
 
@@ -88,8 +107,13 @@ const adjustCredits = (req: Request, amount: number): boolean => {
     return false
 }
 
-//--[ Do they have sufficient credits ]----------------------------------------
-
+/**
+ * Checks if a user has sufficient credits.
+ *
+ * @param {Request} req - The request object containing the user's token.
+ * @param {number} amount - The amount of credits required.
+ * @return {boolean} True if the user has sufficient credits, false otherwise.
+ */
 const hasCredits = (req: Request, amount: number): boolean => {
     const token = serve.getCookie(req, "token")
 
@@ -104,8 +128,13 @@ const hasCredits = (req: Request, amount: number): boolean => {
     return false
 }
 
-//--[ Create json response ]---------------------------------------------------
-
+/** 
+ * Creates a JSON response with a given result and optional extra data. ******
+ * 
+ * @param {string} result - The main result to be sent in the response.
+ * @param {Record<string, string>} extra - Optional extra data to be included in the response.
+ * @return {Response} A JSON response with the result and extra data.
+ */
 const jsonResponse = (result: string, extra: Record<string, string> = {}): Response => {
     const sendMessage = { text: result }
     const finalMessage = JSON.stringify({ ...sendMessage, ...extra })
@@ -120,88 +149,93 @@ const jsonResponse = (result: string, extra: Record<string, string> = {}): Respo
 
 //--[ Start the server ]-------------------------------------------------------
 
-await initDb()
+const main = async () => {
+	await initDb()
 
-const server = serve({
-    hostname: Bun.env.HOSTNAME || "localhost",
-    port: Bun.env.PORT || 3000,
+	const server = serve({
+		hostname: Bun.env.HOSTNAME || "localhost",
+		port: Bun.env.PORT || 3000,
 
-    async fetch(req: Request) {
-        const route = new Route(req.url)
-        const router: RouteResult = route.route()
-        const command: string = `${req.method} ${router.url}`
+		async fetch(req: Request) {
+			const route = new Route(req.url)
+			const router: RouteResult = route.route()
+			const command: string = `${req.method} ${router.url}`
 
-        //--[ If they are all ready authenticated redirect to app ]------------
+			//--[ If they are all ready authenticated redirect to app ]------------
 
-        if (command == "GET public/index.html") {
-            const token = serve.getCookie(req, "token")
+			if (command == "GET public/index.html") {
+				const token = serve.getCookie(req, "token")
 
-            if (token != "" && DbHelper.tokenExists(db, token)) {
-                return Response.redirect("/app")
-            }
-        }
+				if (token != "" && DbHelper.tokenExists(db, token)) {
+					return Response.redirect("/app")
+				}
+			}
 
-        //--[ Handle login ]---------------------------------------------------
+			//--[ Handle login ]---------------------------------------------------
 
-        if (command == "POST login/index.html") {
-            const form: Credentials = await req.json()
+			if (command == "POST login/index.html") {
+				const form: Credentials = await req.json()
 
-            if ((await DbHelper.validateUser(db, form)) === true) {
-                let token = crypto.randomUUID() + "-" + crypto.randomUUID() + "-" + crypto.randomUUID()
-                DbHelper.updateUserToken(db, token, form.email)
+				if ((await DbHelper.validateUser(db, form)) === true) {
+					let token = crypto.randomUUID() + "-" + crypto.randomUUID() + "-" + crypto.randomUUID()
+					DbHelper.updateUserToken(db, token, form.email)
 
-                let res = jsonResponse("success")
-                res = serve.setCookie(res, "token", token, { maxAge: 86400, httpOnly: true })
+					let res = jsonResponse("success")
+					res = serve.setCookie(res, "token", token, { maxAge: 86400, httpOnly: true })
 
-                return res
-            }
-            return jsonResponse("fail")
-        }
+					return res
+				}
+				return jsonResponse("fail")
+			}
 
-        //--[ Handle Image Generations ]---------------------------------------
+			//--[ Handle Image Generations ]---------------------------------------
 
-        if (command == "POST data/index.html") {
-            const form: ImageGenerationParams = await req.json()
+			if (command == "POST data/index.html") {
+				const form: ImageGenerationParams = await req.json()
 
-            if (hasCredits(req, 1)) {
-                if (adjustCredits(req, -1)) {
-                    const result = await runJob(form)
-                    // TODO: check result
-                    return jsonResponse("success", { image: result! })
-                }
-            }
-            return jsonResponse("fail", { redirect: "/app/nocredits.html" })
-        }
+				if (hasCredits(req, 1)) {
+					if (adjustCredits(req, -1)) {
+						const result = await runJob(form)
+						// TODO: check result
+						return jsonResponse("success", { image: result! })
+					}
+				}
+				return jsonResponse("fail", { redirect: "/app/nocredits.html" })
+			}
 
-        //--[ Handle Web Pages ]-----------------------------------------------
+			//--[ Handle Web Pages ]-----------------------------------------------
 
-        const htmlResponse = await serveHTML(router.path)
+			const htmlResponse = await serveHTML(router.path)
 
-        if (htmlResponse.status === 404) {
-            return Response.redirect("/404.html")
-        }
+			if (htmlResponse.status === 404) {
+				return Response.redirect("/404.html")
+			}
 
-        // check for token on this privileged path
-        if (router.route == "app") {
-            const token = serve.getCookie(req, "token")
-            if (token != "" && DbHelper.tokenExists(db, token)) {
-                return htmlResponse
-            }
-            return Response.redirect("/expired.html")
-        }
+			// check for token on this privileged path
+			if (router.route == "app") {
+				const token = serve.getCookie(req, "token")
+				if (token != "" && DbHelper.tokenExists(db, token)) {
+					return htmlResponse
+				}
+				return Response.redirect("/expired.html")
+			}
 
-        return htmlResponse
-    },
-})
+			return htmlResponse
+		},
+	})
+	
+	console.log()
+	console.log(`Server running on ${server.url}`)
+	console.log("Press Ctrl-C to exit")
 
-//--[ Launch a browser ]-------------------------------------------------------
+	//--[ Launch a browser ]-------------------------------------------------------
 
-console.log()
-console.log(`Server running on ${server.url}`)
-console.log("Press Ctrl-C to exit")
+	var start = process.platform == "darwin" ? "open" : process.platform == "win32" ? "start" : "xdg-open"
+	require("child_process").exec(`${start} ${server.url}`)
+}
 
-var start = process.platform == "darwin" ? "open" : process.platform == "win32" ? "start" : "xdg-open"
-require("child_process").exec(`${start} ${server.url}`)
+
+main()
 
 // TODO: Create User Page
 // TODO: Add Credits Page
