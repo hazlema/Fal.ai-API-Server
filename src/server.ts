@@ -1,173 +1,89 @@
-import { Database } from "bun:sqlite"
-import * as fal from "@fal-ai/serverless-client"
-import env from "./env"
-import Route from "./route"
-import dbHelper from "./dbhelper"
+import { serve as bunServe, type Server, type ServeOptions } from "bun"
 
-await env()
+interface CookieOptions {
+    maxAge?: number
+    expires?: Date
+    httpOnly?: boolean
+    secure?: boolean
+    domain?: string
+    path?: string
+    sameSite?: "Strict" | "Lax" | "None"
+}
 
-fal.config({
-    credentials: Bun.env.FAL_KEY,
-})
+interface ExtendedServe {
+    (options: ServeOptions): Server
+    getAllCookies(req: Request): Record<string, string>
+    setCookie(res: Response, name: string, value: string, options?: CookieOptions): Response
+	cookieExists(req: Request, name: string): boolean
+	getCookie(req: Request, name: string): string 
+}
 
-//--[ Init database ]----------------------------------------------------------
-
-const db = new Database("server.sqlite", { create: true })
-
-const initDb = async () => {
-    if (!dbHelper.tableExists(db, "users")) {
-        console.log("Creating database tables")
-        dbHelper.createTable(db)
-    }
-
-    if (!dbHelper.userExists(db, "hazlema@gmail.com")) {
-        console.log("creating test user...")
-        await dbHelper.createUser(db, {
-            email: "hazlema@gmail.com",
-            password: "Kelly862004!",
-            creation: new Date(),
-            token: null,
-            credits: 100000,
+/**
+ * Parses the cookies from the request header.
+ *
+ * @param {Request} req - The request object.
+ * @return {Record<string, string>} - An object containing the parsed cookies.
+ */
+const getAllCookies = (req: Request): Record<string, string> => {
+    const cookieHeader = req.headers.get("Cookie") || ""
+    return Object.fromEntries(
+        cookieHeader.split(";").map((cookie) => {
+            const [key, value] = cookie.split("=").map((part) => part.trim())
+            return [key, decodeURIComponent(value)]
         })
-    }
+    )
 }
 
-//--[ Handle image generations ]-----------------------------------------------
-
-const runJob = async (form: ImageGenerationParams): Promise<string | null> => {
-    try {
-        const result: FalAIResponse = await fal.subscribe("fal-ai/flux-pro", {
-            input: {
-                prompt: form.prompt,
-                image_size: form.image_size,
-                seed: form.seed,
-                num_inference_steps: form.steps,
-                guidance_scale: form.guidance,
-                num_images: 1,
-                safety_tolerance: 5,
-            },
-        })
-
-        return result.images[0].url
-    } catch (error) {
-        console.error("Error details:", JSON.stringify(error, null, 2))
-    }
-
-    return null
+/**
+ * Checks if a cookie with the given name exists in the request.
+ *
+ * @param {Request} req - The request object to check for the cookie.
+ * @param {string} name - The name of the cookie to check for.
+ * @return {boolean} True if the cookie exists, false otherwise.
+ */
+const cookieExists = (req: Request, name: string): boolean => {
+	const all = getAllCookies(req)
+	return (Object.keys(all).includes(name)) ? true : false
 }
 
-//--[ Serve an HTML file ]-----------------------------------------------------
-
-const serveHTML = async (htmlPath: string): Promise<Response> => {
-    try {
-        const file = Bun.file(htmlPath)
-        if (await file.exists()) {
-            return new Response(file, {
-                headers: { "Content-Type": file.type },
-            })
-        }
-    } catch (error) {
-        console.error(`Error serving HTML file ${htmlPath}: ${error}`)
-    }
-
-    return new Response("File not found", { status: 404 })
+/**
+ * Retrieves a specific cookie from the request by its name.
+ *
+ * @param {Request} req - The request object to retrieve the cookie from.
+ * @param {string} name - The name of the cookie to retrieve.
+ * @return {string} The value of the cookie, or an empty string if it does not exist.
+ */
+const getCookie = (req: Request, name: string): string => {
+	const all = getAllCookies(req)
+	return (Object.keys(all).includes(name)) ? all[name] : "";
 }
 
-//--[ Check req for a token ]--------------------------------------------------
+/**
+ * Sets a cookie on the given response object.
+ *
+ * @param {Response} res - The response object to set the cookie on.
+ * @param {string} name - The name of the cookie.
+ * @param {string} value - The value of the cookie.
+ * @param {CookieOptions} [options={}] - Optional cookie options.
+ * @return {Response} The response object with the cookie set.
+ */
+const setCookie = (res: Response, name: string, value: string, options: CookieOptions = {}): Response => {
+    let cookieString = `${encodeURIComponent(name)}=${encodeURIComponent(value)}`
 
-const checkToken = (req: Request): boolean => {
-    const cookieHeader = req.headers.get("Cookie")
+    if (options.maxAge) cookieString += `; Max-Age=${options.maxAge}`
+    if (options.expires) cookieString += `; Expires=${options.expires.toUTCString()}`
+    if (options.httpOnly) cookieString += "; HttpOnly"
+    if (options.secure) cookieString += "; Secure"
+    if (options.domain) cookieString += `; Domain=${options.domain}`
+    if (options.path) cookieString += `; Path=${options.path}`
+    if (options.sameSite) cookieString += `; SameSite=${options.sameSite}`
 
-    if (cookieHeader) {
-        const cookies = Object.fromEntries(cookieHeader.split("; ").map((cookie) => cookie.split("=")))
-        if (cookies && Object.keys(cookies).includes("token")) {
-            if (dbHelper.tokenExists(db, cookies.token)) {
-                return true
-            }
-        }
-        return false
-    }
-    return false
+    res.headers.append("Set-Cookie", cookieString)
+    return res
 }
 
-//--[ Start the server ]-------------------------------------------------------
-
-await initDb()
-
-const server = Bun.serve({
-    hostname: Bun.env.HOSTNAME || "localhost",
-    port: Bun.env.PORT || 3000,
-
-    async fetch(req: Request) {
-        const route = new Route(req.url)
-        const router: RouteResult = route.route()
-        const command: string = `${req.method} ${router.url}`
-
-        //--[ If they are all ready authenticated redirect to app ]------------
-
-		if (command == "GET public/index.html") {
-			if (checkToken(req)) {
-				return Response.redirect("/app")
-			}
-		}
-		
-        //--[ Handle login ]---------------------------------------------------
-
-        if (command == "POST login/index.html") {
-            const form: credentials = await req.json()
-
-            if ((await dbHelper.validateUser(db, form)) === true) {
-                let token = crypto.randomUUID() + "-" + crypto.randomUUID() + "-" + crypto.randomUUID()
-                dbHelper.updateUserToken(db, token, form.email)
-
-                // Set the cookie, expires in 24 hours
-                const headers = new Headers()
-                headers.set("Content-Type", "application/json")
-                headers.append("Set-Cookie", `token=${token}; Max-Age=86400;`)
-
-                console.log(`Auth request: ${form.email} -- Approved`)
-                return new Response(JSON.stringify({ text: "success" }), { status: 200, headers: headers })
-            }
-
-            console.log(`Auth request: ${form.email} -- Failed`)
-            return new Response(JSON.stringify({ text: "fail" }), { status: 200, headers: { "Content-Type": "application/json" } })
-        }
-
-        //--[ Handle Image Generations ]---------------------------------------
-
-        if (command == "POST data/index.html") {
-            const form: ImageGenerationParams = await req.json()
-            console.log(form)
-
-            const result = await runJob(form)
-            return new Response(JSON.stringify({ text: "success", image: result }), { status: 200, headers: { "Content-Type": "application/json" } })
-        }
-
-        //--[ Handle Web Pages ]-----------------------------------------------
-
-        const htmlResponse = await serveHTML(router.path)
-
-        if (htmlResponse.status === 404) {
-            return Response.redirect("/404.html")
-        }
-
-        // check for token on this privileged path
-        if (router.route == "app") {
-            if (checkToken(req)) {
-            	return htmlResponse
-			}
-			return Response.redirect("/expired.html")
-		}
-
-        return htmlResponse
-    },
-})
-
-//--[ Launch a browser ]-------------------------------------------------------
-
-console.log()
-console.log(`Server running on ${server.url}`)
-console.log("Press Ctrl-C to exit")
-
-var start = process.platform == "darwin" ? "open" : process.platform == "win32" ? "start" : "xdg-open"
-require("child_process").exec(`${start} ${server.url}`)
+/**
+ * Create the exported server function with the extended functionality.
+ */
+const serve: ExtendedServe = Object.assign((options: ServeOptions) => bunServe(options), { getAllCookies, setCookie, cookieExists, getCookie })
+export { serve }

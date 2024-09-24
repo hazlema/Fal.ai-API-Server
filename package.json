@@ -3,7 +3,7 @@
 	"module": "src/server.ts",
 	"type": "module",
 	"scripts": {
-		"server": "cd src;bun server.ts"
+		"server": "cd src;bun index.ts"
 	},
 	"dependencies": {
 		"@fal-ai/serverless-client": "^0.14.2"

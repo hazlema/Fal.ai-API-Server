@@ -5,12 +5,7 @@ export default class Route extends URL {
         super(url)
     }
 
-    /**
-     * Parses the URL path and returns a RouteResult object containing information about the route, file, URL, and path.
-     *
-     * @return {RouteResult} An object containing the route, file, URL, and path.
-     */
-	route(): RouteResult {
+    route(): RouteResult {
         const filtered = this.pathname.split("/").filter(Boolean)
 
         if (filtered.length === 0) {

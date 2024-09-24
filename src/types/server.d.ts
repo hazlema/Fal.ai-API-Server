@@ -18,15 +18,15 @@ interface FalAIResponse {
     prompt: string
 }
 
-type ImageSize = "square" | "square_hd" | "portrait_4_3" | "portrait_16_9" | "landscape_4_3" | "landscape_16_9";
+type ImageSize = "square" | "square_hd" | "portrait_4_3" | "portrait_16_9" | "landscape_4_3" | "landscape_16_9"
 
 type ImageGenerationParams = {
-  prompt: string;
-  steps: number;
-  image_size: ImageSize;
-  seed: number;
-  guidance: number;
-};
+    prompt: string
+    steps: number
+    image_size: ImageSize
+    seed: number
+    guidance: number
+}
 
 interface RouteResult {
     route: string

@@ -5,7 +5,7 @@ function submitForm(e) {
 	const formObject = Object.fromEntries(formData.entries())
 
 	console.log(formObject)
-	
+
 	fetch("/login", {
 		method: "POST",
 		headers: {
@@ -24,7 +24,7 @@ function submitForm(e) {
 			console.error("Error:", error)
 			alert("An error occurred while sending the form data. Check the console for details.")
 		})
-	}
+}
 
 document.addEventListener("DOMContentLoaded", function () {
 	const form = document.getElementById("loginForm")

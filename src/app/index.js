@@ -8,10 +8,10 @@ async function loadImage(url, elem) {
 
 function updateImageContainerSize() {
 	const container = document.getElementById("imageContainer")
-	const selectedOption   = document.getElementById("image_size").options[document.getElementById("image_size").selectedIndex]
-	const [width, height]  = selectedOption.textContent.split(" ")[0].split("x")
+	const selectedOption = document.getElementById("image_size").options[document.getElementById("image_size").selectedIndex]
+	const [width, height] = selectedOption.textContent.split(" ")[0].split("x")
 
-	container.style.width  = `${width}px`
+	container.style.width = `${width}px`
 	container.style.height = `${height}px`
 }
 
@@ -52,8 +52,11 @@ function submitForm(e) {
 			if (data["image"]) {
 				await loadImage(data["image"], document.getElementById("displayImage"))
 				hideAnimation()
+			} else {
+				if (data["redirect"]) {
+					window.location.href = data["redirect"]
+				}
 			}
-			console.log("Success:", data)
 		})
 		.catch((error) => {
 			console.error("Error:", error)

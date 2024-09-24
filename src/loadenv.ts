@@ -5,7 +5,7 @@ import type { BunFile } from "bun"
 
 //--[ Read .env files ]--------------------------------------------------------
 
-const env = async (envPath: string = ".env"): Promise<void> => {
+const LoadEnv = async (envPath: string = ".env"): Promise<void> => {
     const file: BunFile = Bun.file(envPath)
 
     if (file.name && (await file.exists())) {
@@ -43,4 +43,4 @@ const env = async (envPath: string = ".env"): Promise<void> => {
     }
 }
 
-export default env
+export default LoadEnv
