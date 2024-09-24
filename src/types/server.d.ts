@@ -1,36 +1,17 @@
-interface FalAIImage {
-    url: string
-    width: number
-    height: number
-    content_type: string
+interface CookieOptions {
+    maxAge?: number
+    expires?: Date
+    httpOnly?: boolean
+    secure?: boolean
+    domain?: string
+    path?: string
+    sameSite?: "Strict" | "Lax" | "None"
 }
 
-interface FalAITimings {
-    inference: number
-    // You can add more timing properties here if needed
-}
-
-interface FalAIResponse {
-    images: FalAIImage[]
-    timings: FalAITimings
-    seed: number
-    has_nsfw_concepts: boolean[]
-    prompt: string
-}
-
-type ImageSize = "square" | "square_hd" | "portrait_4_3" | "portrait_16_9" | "landscape_4_3" | "landscape_16_9"
-
-type ImageGenerationParams = {
-    prompt: string
-    steps: number
-    image_size: ImageSize
-    seed: number
-    guidance: number
-}
-
-interface RouteResult {
-    route: string
-    file: string
-    url: string
-    path: string
+interface ExtendedServe {
+    (options: ServeOptions): Server
+    getAllCookies(req: Request): Record<string, string>
+    setCookie(res: Response, name: string, value: string, options?: CookieOptions): Response
+	cookieExists(req: Request, name: string): boolean
+	getCookie(req: Request, name: string): string 
 }

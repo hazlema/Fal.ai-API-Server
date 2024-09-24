@@ -196,8 +196,12 @@ const main = async () => {
 				if (hasCredits(req, 1)) {
 					if (adjustCredits(req, -1)) {
 						const result = await runJob(form)
-						// TODO: check result
-						return jsonResponse("success", { image: result! })
+						if (result) {
+							return jsonResponse("success", { image: result })
+						} else {
+							adjustCredits(req, +1)
+							return jsonResponse("fail", { redirect: "/app/error.html" })
+						}
 					}
 				}
 				return jsonResponse("fail", { redirect: "/app/nocredits.html" })
