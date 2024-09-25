@@ -3,9 +3,9 @@
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Login</title>
+        <title>Create an account</title>
         <link rel="stylesheet" href="public.css" />
-        <script src="index.js"></script>
+        <script src="newuser.js"></script>
     </head>
     <body>
         <div class="main-container">
@@ -19,8 +19,14 @@
                         <label for="password">Password:</label>
                         <input type="password" id="password" name="password" required />
                     </div>
-                    <button type="submit">Log In</button>
-                    <button type="button" onclick="window.location.href='/newuser.html'">Create Account</button>
+                    <div class="form-group">
+                        <label for="confirm">Confirm Password:</label>
+                        <input type="password" id="confirm" name="confirm" required />
+                    </div>
+					<div class="form-group">
+						<p style="text-align: center; width: 100%;">You will get 20 free image credits</p>
+					</div>
+                    <button type="submit">Create Account</button>
                 </form>
             </div>
         </div>

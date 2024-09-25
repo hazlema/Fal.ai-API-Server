@@ -10,6 +10,7 @@ interface User {
 interface Credentials {
   email: string;
   password: string;
+  confirm?: string;
 }
 
 interface DbHelper {

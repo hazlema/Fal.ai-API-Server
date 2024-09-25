@@ -16,7 +16,7 @@ Fal.config({
 const db = new Database("server.sqlite", { create: true })
 
 /**
- * Initializes the database by creating the 'users' table if it does not exist, 
+ * Initializes the database by creating the 'users' table if it does not exist,
  * and creates a test user with a predefined email and password if the user does not exist.
  *
  * @return {Promise<void>} A promise that resolves when the initialization is complete.
@@ -25,17 +25,6 @@ const initDb = async () => {
     if (!DbHelper.tableExists(db, "users")) {
         console.log("Creating database tables")
         DbHelper.createTable(db)
-    }
-
-    if (!DbHelper.userExists(db, "hazlema@gmail.com")) {
-        console.log("creating test user...")
-        await DbHelper.createUser(db, {
-            email: "hazlema@gmail.com",
-            password: "Kelly862004!",
-            creation: new Date(),
-            token: null,
-            credits: 100000,
-        })
     }
 }
 
@@ -128,9 +117,9 @@ const hasCredits = (req: Request, amount: number): boolean => {
     return false
 }
 
-/** 
+/**
  * Creates a JSON response with a given result and optional extra data. ******
- * 
+ *
  * @param {string} result - The main result to be sent in the response.
  * @param {Record<string, string>} extra - Optional extra data to be included in the response.
  * @return {Response} A JSON response with the result and extra data.
@@ -150,97 +139,119 @@ const jsonResponse = (result: string, extra: Record<string, string> = {}): Respo
 //--[ Start the server ]-------------------------------------------------------
 
 const main = async () => {
-	await initDb()
+    await initDb()
 
-	const server = serve({
-		hostname: Bun.env.HOSTNAME || "localhost",
-		port: Bun.env.PORT || 3000,
+    const server = serve({
+        hostname: Bun.env.HOSTNAME || "localhost",
+        port: Bun.env.PORT || 3000,
 
-		async fetch(req: Request) {
-			const route = new Route(req.url)
-			const router: RouteResult = route.route()
-			const command: string = `${req.method} ${router.url}`
+        async fetch(req: Request) {
+            const route = new Route(req.url)
+            const router: RouteResult = route.route()
+            const command: string = `${req.method} ${router.url}`
 
-			//--[ If they are all ready authenticated redirect to app ]------------
+            //--[ If they are all ready authenticated redirect to app ]------------
 
-			if (command == "GET public/index.html") {
-				const token = serve.getCookie(req, "token")
+            if (command == "GET public/index.html") {
+                const token = serve.getCookie(req, "token")
 
-				if (token != "" && DbHelper.tokenExists(db, token)) {
-					return Response.redirect("/app")
-				}
-			}
+                if (token != "" && DbHelper.tokenExists(db, token)) {
+                    return Response.redirect("/app")
+                }
+            }
 
-			//--[ Handle login ]---------------------------------------------------
+            //--[ Handle Create ]----------------------------------------------
 
-			if (command == "POST login/index.html") {
-				const form: Credentials = await req.json()
+            if (command == "POST create/index.html") {
+                const form: Credentials = await req.json()
 
-				if ((await DbHelper.validateUser(db, form)) === true) {
-					let token = crypto.randomUUID() + "-" + crypto.randomUUID() + "-" + crypto.randomUUID()
-					DbHelper.updateUserToken(db, token, form.email)
+                let token = crypto.randomUUID() + "-" + crypto.randomUUID() + "-" + crypto.randomUUID()
 
-					let res = jsonResponse("success")
-					res = serve.setCookie(res, "token", token, { maxAge: 86400, httpOnly: true })
+                if (!DbHelper.userExists(db, form.email)) {
+                    await DbHelper.createUser(db, {
+                        email: form.email,
+                        password: form.password,
+                        creation: new Date(),
+                        token: token,
+                        credits: 20,
+                    })
 
-					return res
-				}
-				return jsonResponse("fail")
-			}
+                    let res = jsonResponse("success", { redirect: "/app" })
+                    res = serve.setCookie(res, "token", token, { maxAge: 86400, httpOnly: true })
 
-			//--[ Handle Image Generations ]---------------------------------------
+                    return res
+                }
+                return jsonResponse("fail")
+            }
 
-			if (command == "POST data/index.html") {
-				const form: ImageGenerationParams = await req.json()
+            //--[ Handle login ]---------------------------------------------------
 
-				if (hasCredits(req, 1)) {
-					if (adjustCredits(req, -1)) {
-						const result = await runJob(form)
-						if (result) {
-							return jsonResponse("success", { image: result })
-						} else {
-							adjustCredits(req, +1)
-							return jsonResponse("fail", { redirect: "/app/error.html" })
-						}
-					}
-				}
-				return jsonResponse("fail", { redirect: "/app/nocredits.html" })
-			}
+            if (command == "POST login/index.html") {
+                const form: Credentials = await req.json()
 
-			//--[ Handle Web Pages ]-----------------------------------------------
+                if ((await DbHelper.validateUser(db, form)) === true) {
+                    let token = crypto.randomUUID() + "-" + crypto.randomUUID() + "-" + crypto.randomUUID()
+                    DbHelper.updateUserToken(db, token, form.email)
 
-			const htmlResponse = await serveHTML(router.path)
+                    let res = jsonResponse("success")
+                    res = serve.setCookie(res, "token", token, { maxAge: 86400, httpOnly: true })
 
-			if (htmlResponse.status === 404) {
-				return Response.redirect("/404.html")
-			}
+                    return res
+                }
+                return jsonResponse("fail")
+            }
 
-			// check for token on this privileged path
-			if (router.route == "app") {
-				const token = serve.getCookie(req, "token")
-				if (token != "" && DbHelper.tokenExists(db, token)) {
-					return htmlResponse
-				}
-				return Response.redirect("/expired.html")
-			}
+            //--[ Handle Image Generations ]---------------------------------------
 
-			return htmlResponse
-		},
-	})
-	
-	console.log()
-	console.log(`Server running on ${server.url}`)
-	console.log("Press Ctrl-C to exit")
+            if (command == "POST data/index.html") {
+                const form: ImageGenerationParams = await req.json()
 
-	//--[ Launch a browser ]-------------------------------------------------------
+                if (hasCredits(req, 1)) {
+                    if (adjustCredits(req, -1)) {
+                        const result = await runJob(form)
+                        if (result) {
+                            return jsonResponse("success", { image: result })
+                        } else {
+                            adjustCredits(req, +1)
+                            return jsonResponse("fail", { redirect: "/app/error.html" })
+                        }
+                    }
+                }
+                return jsonResponse("fail", { redirect: "/app/nocredits.html" })
+            }
 
-	var start = process.platform == "darwin" ? "open" : process.platform == "win32" ? "start" : "xdg-open"
-	require("child_process").exec(`${start} ${server.url}`)
+            //--[ Handle Web Pages ]-----------------------------------------------
+
+            const htmlResponse = await serveHTML(router.path)
+
+            if (htmlResponse.status === 404) {
+                return Response.redirect("/404.html")
+            }
+
+            // check for token on this privileged path
+            if (router.route == "app") {
+                const token = serve.getCookie(req, "token")
+                if (token != "" && DbHelper.tokenExists(db, token)) {
+                    return htmlResponse
+                }
+                return Response.redirect("/expired.html")
+            }
+
+            return htmlResponse
+        },
+    })
+
+    console.log()
+    console.log(`Server running on ${server.url}`)
+    console.log("Press Ctrl-C to exit")
+
+    //--[ Launch a browser ]-------------------------------------------------------
+
+    var start = process.platform == "darwin" ? "open" : process.platform == "win32" ? "start" : "xdg-open"
+    require("child_process").exec(`${start} ${server.url}`)
 }
-
 
 main()
 
-// TODO: Create User Page
 // TODO: Add Credits Page
 // TODO: CLI interface
