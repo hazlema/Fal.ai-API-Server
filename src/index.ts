@@ -184,6 +184,20 @@ const main = async () => {
                 return jsonResponse("fail")
             }
 
+			//--[ Add Credits ]----------------------------------------------
+
+            if (command == "POST addcredits/index.html") {
+                const token = serve.getCookie(req, "token")
+
+				if (token != "") {
+					DbHelper.adjustCredits(db, token, 20)
+
+                    let res = jsonResponse("success", { redirect: "/app/success.html" })
+                    return res
+                }
+                return jsonResponse("fail")
+            }
+
             //--[ Handle login ]---------------------------------------------------
 
             if (command == "POST login/index.html") {
