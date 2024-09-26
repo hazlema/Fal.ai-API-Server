@@ -5,12 +5,21 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>Create an account</title>
         <link rel="stylesheet" href="public.css" />
-        <script src="newuser.js"></script>
+        <script src="ajax.js"></script>
+		<script>
+			function loginForm(result, id) {
+				if (result.text == "success") {
+					window.location.href = result.redirect
+				} else {
+					alert("Unable to create user");
+				}
+			}	
+		</script>
     </head>
     <body>
         <div class="main-container">
             <div class="form-container">
-                <form id="loginForm">
+                <form fetch="true" id="loginForm" action="/create">
                     <div class="form-group">
                         <label for="email">Email:</label>
                         <input type="text" id="email" name="email" required />
