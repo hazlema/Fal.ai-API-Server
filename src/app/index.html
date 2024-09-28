@@ -1,108 +1,160 @@
 <!DOCTYPE html>
-<html lang="en">
-    <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Image Display with Prompt at Top and Compact Form</title>
-        <link rel="stylesheet" href="/app/app.css" />
-        <script src="/app/index.js"></script>
-    </head>
-    <body>
-        <div class="main-container">
-            <div class="image-container" id="imageContainer">
-                <img src="app/default.jpg" alt="Placeholder Image" id="displayImage" />
-                <div class="animation-container" id="animationContainer">
-                    <svg width="100%" height="100%" viewBox="0 0 124.88334 124.88333">
-                        <rect
-                            style="fill: #ececec; fill-opacity: 0.9; stroke: #424242; stroke-width: 0.5px; stroke-dasharray: none; stroke-opacity: 1"
-                            id="rect1"
-                            width="124.88333"
-                            height="23.221409"
-                            x="0"
-                            y="49.216824"
-                            ry="0"
-                        />
-                        <g id="g1" transform="matrix(0.04134115,0,0,0.04033357,101.07083,50.236865)">
-                            <path style="fill: #d7d7d7" d="M 56.998,481.397 56.996,12.611 455.005,12.608 V 499.393 H 56.996 Z" id="path2" />
-                            <path style="fill: #b0b0b0" d="M 255.811,481.397 255.81,12.611 455.005,12.608 V 499.393 H 255.81 Z" id="path3" />
-                            <path
-                                style="fill: #6f6f6f"
-                                d="M 179.427,358.099 H 71.433 C 32.045,358.099 0,326.055 0,286.667 V 142.36 h 56.996 v 33.391 H 33.391 v 110.915 c 0,20.976 17.066,38.042 38.042,38.042 h 107.994 z"
-                                id="path4"
-                            />
-                            <path
-                                style="fill: #444444"
-                                d="M 440.567,358.099 H 332.573 v -33.391 h 107.994 c 20.976,0 38.042,-17.066 38.042,-38.042 V 175.752 H 455.005 V 142.36 H 512 v 144.306 c 0,39.389 -32.045,71.433 -71.433,71.433 z"
-                                id="path5"
-                            />
-                            <path
-                                style="fill: #53b8da"
-                                d="m 142.691,12.729 c 0,39.234 0,152.82 0,168.525 0,15.706 9.441,31.911 30.228,31.911 20.783,0 30.23,-16.205 30.23,-31.911 0,-15.705 0,-17.799 0,-28.889 V 150.8 c 0,-11.091 0,15.705 0,0 0,-15.706 8.261,-31.912 26.409,-31.912 18.149,0 26.403,16.205 26.403,31.912 l -0.15,24.836 c 0,39.234 0,39.325 0,55.03 0,15.705 9.769,31.911 31.272,31.911 21.497,0 31.273,-16.205 31.273,-31.911 0,-15.705 0,-23.189 0,-34.278 0,-49.898 42.899,-9.505 42.899,-52.319 0,-13.623 0,-131.34 0,-131.34"
-                                id="path6"
-                            />
-                            <path
-                                style="fill: #17778d"
-                                d="m 256,12.729 c 0,39.234 -0.039,122.365 -0.039,138.071 l -0.15,24.836 c 0,39.234 0,39.325 0,55.03 0,15.705 9.769,31.911 31.272,31.911 21.497,0 31.273,-16.205 31.273,-31.911 0,-15.705 0,-23.189 0,-34.278 0,-49.898 42.899,-9.505 42.899,-52.319 0,-13.623 0,-131.34 0,-131.34"
-                                id="path7"
-                            />
-                            <path style="fill: #e79c25" d="M 349.269,390.381 H 162.731 v -97.952 h 186.537 v 97.952 z" id="path8" />
-                            <path style="fill: #e0711b" d="M 349.269,390.381 H 256 v -97.952 h 93.269 z" id="path10" />
-                        </g>
-                        <g id="g15" transform="matrix(0.04134115,0,0,0.04134115,2.6458334,50.44579)">
-                            <path style="fill: #6f6f6f" d="M 356.765,482.164 H 155.235 L 176.57,352.942 h 158.861 z" id="path1" />
-                            <path style="fill: #444444" d="M 356.765,482.164 H 256 V 352.942 h 79.43 z" id="path2-3" />
-                            <rect x="124.817" y="448.77701" style="fill: #b0b0b0" width="262.37799" height="33.390999" id="rect2" />
-                            <rect x="256" y="448.77701" style="fill: #8b8b8b" width="131.183" height="33.390999" id="rect3" />
-                            <path style="fill: #444444" d="M 512,386.334 H 0 V 29.832 h 512 z" id="path3-6" />
-                            <path style="fill: #232323" d="M 512,386.334 H 256 V 29.832 h 256 z" id="path4-7" />
-                            <rect x="33.390999" y="63.223" style="fill: #6f6f6f" width="445.21701" height="289.72501" id="rect4" />
-                            <rect x="256" y="63.223" style="fill: #444444" width="222.60899" height="289.72501" id="rect5" />
-                        </g>
-                        <path style="fill: #008000; stroke: #008000; stroke-width: 0.264583" d="m 23.8125,59.795835 h 77.25833" id="path16" />
-                        <circle class="data-particle" cx="23.8125" cy="59.795835" r="8" fill="#FFA500" />
-                        <circle class="data-particle" cx="23.8125" cy="59.795835" r="6" fill="#FFA500" />
-                        <circle class="data-particle" cx="23.8125" cy="59.795835" r="8" fill="#FFA500" />
-                    </svg>
-                </div>
-            </div>
-        </div>
+<html lang="en" class="h-full w-full">
 
-        <div class="form-container">
-            <form id="imageForm">
-                <div class="form-group full-width">
-                    <label for="prompt">Prompt:</label>
-                    <textarea id="prompt" name="prompt" required></textarea>
-                </div>
-                <div class="form-group">
-                    <label for="steps">Steps:</label>
-                    <input type="number" id="steps" name="steps" min="1" value="25" required />
-                </div>
-                <div class="form-group">
-                    <label for="image_size">Image Size:</label>
-                    <select id="image_size" name="image_size">
-                        <option value="square_hd">1024x1024 (1:1)</option>
-                        <option value="square" selected>512x512 (1:1)</option>
-                        <option value="landscape_4_3">1024x768 (4:3)</option>
-                        <option value="portrait_4_3">768x1024 (3:4)</option>
-                        <option value="landscape_16_9">1024x576 (16:9)</option>
-                        <option value="portrait_16_9">576x1024 (9:16)</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="seed">Seed:</label>
-                    <div class="seed-container">
-                        <input type="number" id="seed" name="seed" value="0" required />
-                        <button type="button" id="generateSeed">Random</button>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label for="guidance">Guidance:</label>
-                    <input type="number" id="guidance" name="guidance" step="0.1" value="3.5" required />
-                </div>
-                <div class="form-group full-width">
-                    <button type="submit">Generate Image</button>
-                </div>
-            </form>
-        </div>
-    </body>
+<head>
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<title>Image Generation App</title>
+	<script src="/ajax.js"></script>
+	<script src="/app/index.js"></script>
+	<link rel="stylesheet" href="/default.css" />
+	<style>
+		@keyframes moveData {
+			0% {
+				transform: translate(0, 0);
+				opacity: 0;
+			}
+
+			20% {
+				opacity: 1;
+			}
+
+			80% {
+				opacity: 1;
+			}
+
+			100% {
+				transform: translate(80.795835px, 0);
+				opacity: 0;
+			}
+		}
+
+		.data-particle {
+			animation: moveData 2s linear infinite;
+		}
+
+		.data-particle:nth-child(2) {
+			animation-delay: 0.5s;
+		}
+
+		.data-particle:nth-child(3) {
+			animation-delay: 1s;
+		}
+	</style>
+</head>
+
+<body class="h-full w-full font-sans">
+	<div class="layout-container flex h-screen">
+		<div id="leftColumn"
+			class="left-column w-96 transition-all duration-500 relative overflow-y-auto border-r-4 border-black bg-gradient-to-l from-base-300 to-base-100">
+			<button
+				class="toggle-button absolute top-2 right-5 border-none text-secondary text-2xl cursor-pointer z-10">≡</button>
+
+			<form fetch="true" id="imageForm" name="imageForm" class="app-form-container p-5" action="/data">
+				<div class="form-group full-width mb-4">
+					<label for="prompt" class="block mb-1">Prompt:</label>
+					<textarea id="prompt" name="prompt"
+						class="w-full p-2 border rounded min-h-[100px] resize-y"></textarea>
+				</div>
+
+				<div class="form-group mb-4">
+					<label for="steps" class="block mb-1">Steps:</label>
+					<input type="number" min="1" max="50" value="25" id="steps" name="steps">
+				</div>
+
+				<div class="form-group mb-4">
+					<label for="image_size" class="block mb-1">Image Size:</label>
+					<select id="image_size" name="image_size" class="p-2 border rounded">
+						<option value="square_hd">1024x1024 (1:1)</option>
+						<option value="square" selected>512x512 (1:1)</option>
+						<option value="landscape_4_3">1024x768 (4:3)</option>
+						<option value="portrait_4_3">768x1024 (3:4)</option>
+						<option value="landscape_16_9">1024x576 (16:9)</option>
+						<option value="portrait_16_9">576x1024 (9:16)</option>
+					</select>
+				</div>
+
+				<div class="form-group mb-4">
+					<label for="seed" class="block mb-1">Seed:</label>
+					<div class="seed-container flex gap-2">
+						<input type="number" min="1" max=32**2 step="1" id="seed" name="seed">
+						<button type="button" id="generateSeed" class="btn btn-primary">Random</button>
+					</div>
+				</div>
+
+				<div class="form-group mb-4">
+					<label for="guidance" class="block mb-1">Guidance:</label>
+					<input type="number" min="1" max="10" step="0.1" value="3.5" id="guidance" name="guidance">
+				</div>
+
+				<div class="form-group full-width">
+					<button type="submit" class="w-full btn btn-primary">Generate Image</button>
+				</div>
+			</form>
+		</div>
+
+		<div class="right-column flex-grow flex justify-center items-center p-5 overflow-hidden bg-[#25324b]">
+			<div id="imageContainer"
+				class="image-container w-full h-full flex justify-center items-center bg-black rounded-lg overflow-hidden border-white border-2 relative transition-all duration-500 ease-in-out">
+				<img id="displayImage" src="app/default.jpg" alt="Placeholder Image"
+					class="max-w-full max-h-full object-contain">
+				<div id="animationContainer"
+					class="animation-container absolute inset-0 hidden justify-center items-center z-10">
+					<svg width="100%" height="100%" viewBox="0 0 124.88334 124.88333">
+						<rect style="
+								fill: #ececec;
+								fill-opacity: 0.9;
+								stroke: #424242;
+								stroke-width: 0.5px;
+								stroke-dasharray: none;
+								stroke-opacity: 1;
+							" id="rect1" width="124.88333" height="23.221409" x="0" y="49.216824" ry="0" />
+						<g id="g1" transform="matrix(0.04134115,0,0,0.04033357,101.07083,50.236865)">
+							<path style="fill: #d7d7d7"
+								d="M 56.998,481.397 56.996,12.611 455.005,12.608 V 499.393 H 56.996 Z" id="path2" />
+							<path style="fill: #b0b0b0"
+								d="M 255.811,481.397 255.81,12.611 455.005,12.608 V 499.393 H 255.81 Z" id="path3" />
+							<path style="fill: #6f6f6f"
+								d="M 179.427,358.099 H 71.433 C 32.045,358.099 0,326.055 0,286.667 V 142.36 h 56.996 v 33.391 H 33.391 v 110.915 c 0,20.976 17.066,38.042 38.042,38.042 h 107.994 z"
+								id="path4" />
+							<path style="fill: #444444"
+								d="M 440.567,358.099 H 332.573 v -33.391 h 107.994 c 20.976,0 38.042,-17.066 38.042,-38.042 V 175.752 H 455.005 V 142.36 H 512 v 144.306 c 0,39.389 -32.045,71.433 -71.433,71.433 z"
+								id="path5" />
+							<path style="fill: #53b8da"
+								d="m 142.691,12.729 c 0,39.234 0,152.82 0,168.525 0,15.706 9.441,31.911 30.228,31.911 20.783,0 30.23,-16.205 30.23,-31.911 0,-15.705 0,-17.799 0,-28.889 V 150.8 c 0,-11.091 0,15.705 0,0 0,-15.706 8.261,-31.912 26.409,-31.912 18.149,0 26.403,16.205 26.403,31.912 l -0.15,24.836 c 0,39.234 0,39.325 0,55.03 0,15.705 9.769,31.911 31.272,31.911 21.497,0 31.273,-16.205 31.273,-31.911 0,-15.705 0,-23.189 0,-34.278 0,-49.898 42.899,-9.505 42.899,-52.319 0,-13.623 0,-131.34 0,-131.34"
+								id="path6" />
+							<path style="fill: #17778d"
+								d="m 256,12.729 c 0,39.234 -0.039,122.365 -0.039,138.071 l -0.15,24.836 c 0,39.234 0,39.325 0,55.03 0,15.705 9.769,31.911 31.272,31.911 21.497,0 31.273,-16.205 31.273,-31.911 0,-15.705 0,-23.189 0,-34.278 0,-49.898 42.899,-9.505 42.899,-52.319 0,-13.623 0,-131.34 0,-131.34"
+								id="path7" />
+							<path style="fill: #e79c25" d="M 349.269,390.381 H 162.731 v -97.952 h 186.537 v 97.952 z"
+								id="path8" />
+							<path style="fill: #e0711b" d="M 349.269,390.381 H 256 v -97.952 h 93.269 z" id="path10" />
+						</g>
+						<g id="g15" transform="matrix(0.04134115,0,0,0.04134115,2.6458334,50.44579)">
+							<path style="fill: #6f6f6f" d="M 356.765,482.164 H 155.235 L 176.57,352.942 h 158.861 z"
+								id="path1" />
+							<path style="fill: #444444" d="M 356.765,482.164 H 256 V 352.942 h 79.43 z" id="path2-3" />
+							<rect x="124.817" y="448.77701" style="fill: #b0b0b0" width="262.37799" height="33.390999"
+								id="rect2" />
+							<rect x="256" y="448.77701" style="fill: #8b8b8b" width="131.183" height="33.390999"
+								id="rect3" />
+							<path style="fill: #444444" d="M 512,386.334 H 0 V 29.832 h 512 z" id="path3-6" />
+							<path style="fill: #232323" d="M 512,386.334 H 256 V 29.832 h 256 z" id="path4-7" />
+							<rect x="33.390999" y="63.223" style="fill: #6f6f6f" width="445.21701" height="289.72501"
+								id="rect4" />
+							<rect x="256" y="63.223" style="fill: #444444" width="222.60899" height="289.72501"
+								id="rect5" />
+						</g>
+						<path style="fill: #008000; stroke: #008000; stroke-width: 0.264583"
+							d="m 23.8125,59.795835 h 77.25833" id="path16" />
+						<circle class="data-particle" cx="23.8125" cy="59.795835" r="8" fill="#FFA500" />
+						<circle class="data-particle" cx="23.8125" cy="59.795835" r="6" fill="#FFA500" />
+						<circle class="data-particle" cx="23.8125" cy="59.795835" r="8" fill="#FFA500" />
+					</svg>
+				</div>
+			</div>
+		</div>
+	</div>
+</body>
+
 </html>

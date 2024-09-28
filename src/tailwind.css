@@ -1,0 +1,90 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+	:root:has(:is(.modal-open, .modal:target, .modal-toggle:checked + .modal, .modal[open])) {
+	  scrollbar-gutter: revert !important;
+	}
+ }
+  
+  .btn {
+	@apply rounded-md;
+	@apply font-medium;
+	@apply text-base;
+	@apply text-white;
+	@apply bg-primary;
+	@apply border-primary;
+	@apply hover:bg-primary-content;
+	@apply hover:border-primary-content;
+}
+
+.btn-primary {
+	@apply bg-primary;
+	@apply border-primary;
+	@apply hover:bg-primary-content;
+	@apply hover:border-primary-content;
+}
+
+.btn-secondary {
+	@apply bg-secondary;
+	@apply border-secondary;
+	@apply hover:bg-secondary-content;
+	@apply hover:border-secondary-content;
+}
+
+.btn-accent {
+	@apply bg-accent;
+	@apply border-accent;
+	@apply hover:bg-accent-content;
+	@apply hover:border-accent-content;
+}
+
+.btn-outline {
+	@apply rounded-full;
+	@apply font-medium;
+	@apply text-base;
+	@apply text-primary;
+	@apply border-primary;
+	@apply hover:text-primary-content;
+	@apply hover:border-primary-content;
+}
+
+.btn-outline-primary {
+	@apply text-primary;
+	@apply border-primary;
+	@apply hover:text-primary-content;
+	@apply hover:border-primary-content;
+}
+
+.btn-outline-secondary {
+	@apply text-secondary;
+	@apply border-secondary;
+	@apply hover:text-secondary-content;
+	@apply hover:border-secondary-content;
+}
+
+label {
+	@apply block;
+	@apply text-lg; 
+	@apply font-medium; 
+	@apply text-base-content;
+}
+
+input[type=text],
+input[type=number],
+input[type=password],
+textarea {
+	@apply w-full;
+	@apply input;
+	@apply input-bordered;
+	@apply bg-[#25324b];
+}
+
+select {
+	@apply w-full;
+	@apply bg-base-100;
+	@apply input-bordered;
+	@apply bg-neutral-content;
+	@apply bg-[#25324b];
+}

@@ -4,6 +4,7 @@ import LoadEnv from "./loadenv"
 import Route from "./route"
 import DbHelper from "./dbhelper"
 import { serve } from "./server"
+import dbHelper from "./test/dbhelper"
 
 await LoadEnv()
 
@@ -150,6 +151,98 @@ const main = async () => {
             const router: RouteResult = route.route()
             const command: string = `${req.method} ${router.url}`
 
+			// Restrict endpoints to json only requests
+			if (req.headers.get("Content-Type") == "application/json") {
+
+				//--[ Handle Create ]----------------------------------------------
+
+				if (command == "POST create/index.html") {
+					const form: Credentials = await req.json()
+
+					let token = crypto.randomUUID() + "-" + crypto.randomUUID() + "-" + crypto.randomUUID()
+
+					if (!DbHelper.userExists(db, form.email)) {
+						await DbHelper.createUser(db, {
+							email: form.email,
+							password: form.password,
+							creation: new Date(),
+							token: token,
+							credits: 20,
+						})
+
+						let res = jsonResponse("success", { redirect: "/app" })
+						res = serve.setCookie(res, "token", token, { maxAge: 86400, httpOnly: true })
+
+						return res
+					}
+					return jsonResponse("fail")
+				}
+
+				//--[ Add Credits ]----------------------------------------------
+
+				if (command == "POST addcredits/index.html") {
+					const token = serve.getCookie(req, "token")
+
+					if (token != "") {
+						DbHelper.adjustCredits(db, token, 20)
+
+						let res = jsonResponse("success", { redirect: "/app/success.html" })
+						return res
+					}
+					return jsonResponse("fail")
+				}
+
+				//--[ Handle login ]---------------------------------------------------
+
+				if (command == "POST login/index.html") {
+					const form: Credentials = await req.json()
+
+					if ((await DbHelper.validateUser(db, form)) === true) {
+						let token = crypto.randomUUID() + "-" + crypto.randomUUID() + "-" + crypto.randomUUID()
+						DbHelper.updateUserToken(db, token, form.email)
+
+						let res = jsonResponse("success", { redirect: "/app" })
+						res = serve.setCookie(res, "token", token, { maxAge: 86400, httpOnly: true })
+
+						return res
+					}
+					return jsonResponse("fail")
+				}
+
+				//--[ Handle Image Generations ]---------------------------------------
+
+				if (command == "POST data/index.html") {
+					const form: ImageGenerationParams = await req.json()
+					const token = serve.getCookie(req, "token")
+
+					if (token != "") {
+						const user = DbHelper.getUserByToken(db, token)
+						if (user) {
+							console.log(`Generate request from ${user.email}`)
+						}
+							
+						console.log(JSON.stringify(form, null, 5))
+						console.log()
+
+						if (hasCredits(req, 1)) {
+							if (adjustCredits(req, -1)) {
+								const result = await runJob(form)
+								if (result) {
+									return jsonResponse("success", { image: result })
+								} else {
+									adjustCredits(req, +1)
+									return jsonResponse("fail", { redirect: "/app/error.html" })
+								}
+							}
+						}
+
+						return jsonResponse("fail", { redirect: "/app/nocredits.html" })
+					}
+
+					return jsonResponse("fail", { message: "Unauthorized" })
+				}
+			}
+
             //--[ If they are all ready authenticated redirect to app ]------------
 
             if (command == "GET public/index.html") {
@@ -160,83 +253,9 @@ const main = async () => {
                 }
             }
 
-            //--[ Handle Create ]----------------------------------------------
-
-            if (command == "POST create/index.html") {
-                const form: Credentials = await req.json()
-
-                let token = crypto.randomUUID() + "-" + crypto.randomUUID() + "-" + crypto.randomUUID()
-
-                if (!DbHelper.userExists(db, form.email)) {
-                    await DbHelper.createUser(db, {
-                        email: form.email,
-                        password: form.password,
-                        creation: new Date(),
-                        token: token,
-                        credits: 20,
-                    })
-
-                    let res = jsonResponse("success", { redirect: "/app" })
-                    res = serve.setCookie(res, "token", token, { maxAge: 86400, httpOnly: true })
-
-                    return res
-                }
-                return jsonResponse("fail")
-            }
-
-			//--[ Add Credits ]----------------------------------------------
-
-            if (command == "POST addcredits/index.html") {
-                const token = serve.getCookie(req, "token")
-
-				if (token != "") {
-					DbHelper.adjustCredits(db, token, 20)
-
-                    let res = jsonResponse("success", { redirect: "/app/success.html" })
-                    return res
-                }
-                return jsonResponse("fail")
-            }
-
-            //--[ Handle login ]---------------------------------------------------
-
-            if (command == "POST login/index.html") {
-                const form: Credentials = await req.json()
-
-                if ((await DbHelper.validateUser(db, form)) === true) {
-                    let token = crypto.randomUUID() + "-" + crypto.randomUUID() + "-" + crypto.randomUUID()
-                    DbHelper.updateUserToken(db, token, form.email)
-
-                    let res = jsonResponse("success")
-                    res = serve.setCookie(res, "token", token, { maxAge: 86400, httpOnly: true })
-
-                    return res
-                }
-                return jsonResponse("fail")
-            }
-
-            //--[ Handle Image Generations ]---------------------------------------
-
-            if (command == "POST data/index.html") {
-                const form: ImageGenerationParams = await req.json()
-
-                if (hasCredits(req, 1)) {
-                    if (adjustCredits(req, -1)) {
-                        const result = await runJob(form)
-                        if (result) {
-                            return jsonResponse("success", { image: result })
-                        } else {
-                            adjustCredits(req, +1)
-                            return jsonResponse("fail", { redirect: "/app/error.html" })
-                        }
-                    }
-                }
-                return jsonResponse("fail", { redirect: "/app/nocredits.html" })
-            }
-
             //--[ Handle Web Pages ]-----------------------------------------------
 
-            const htmlResponse = await serveHTML(router.path)
+			const htmlResponse = await serveHTML(router.path)
 
             if (htmlResponse.status === 404) {
                 return Response.redirect("/404.html")

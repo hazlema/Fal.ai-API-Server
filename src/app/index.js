@@ -1,11 +1,3 @@
-async function loadImage(url, elem) {
-	return new Promise((resolve, reject) => {
-		elem.onload = () => resolve(elem)
-		elem.onerror = reject
-		elem.src = url
-	})
-}
-
 function updateImageContainerSize() {
 	const container = document.getElementById("imageContainer")
 	const selectedOption = document.getElementById("image_size").options[document.getElementById("image_size").selectedIndex]
@@ -16,74 +8,63 @@ function updateImageContainerSize() {
 }
 
 function showAnimation() {
-	document.getElementById("animationContainer").classList.add("show")
+	document.getElementById("animationContainer").classList.remove("hidden")
 }
 
 function hideAnimation() {
-	document.getElementById("animationContainer").classList.remove("show")
+	document.getElementById("animationContainer").classList.add("hidden")
 }
 
 function generateRandomSeed() {
 	return Math.floor(Math.random() * 2 ** 32)
 }
 
-function submitForm(e) {
-	const formData = new FormData(e)
-
-	// Convert FormData to a plain object
-	const formObject = Object.fromEntries(formData.entries())
-
-	// Convert numeric values
-	formObject.steps = parseInt(formObject.steps)
-	formObject.seed = parseInt(formObject.seed)
-	formObject.guidance = parseFloat(formObject.guidance)
-
-	showAnimation() // Show the animation when form is submitted
-
-	fetch("/data", {
-		method: "POST",
-		headers: {
-			"Content-Type": "application/json",
-		},
-		body: JSON.stringify(formObject),
+async function loadImage(url, elem) {
+	return new Promise((resolve, reject) => {
+		elem.onload = () => resolve(elem)
+		elem.onerror = reject
+		elem.src = url
 	})
-		.then((response) => response.json())
-		.then(async (data) => {
-			if (data["image"]) {
-				await loadImage(data["image"], document.getElementById("displayImage"))
-				hideAnimation()
-			} else {
-				if (data["redirect"]) {
-					window.location.href = data["redirect"]
-				}
+}
+
+// Called From ajax.js
+async function imageForm(stage, content) {
+	if (stage == "postfetch") {
+		if (content["image"]) {
+			await loadImage(content["image"], document.getElementById("displayImage"))
+		} else {
+			if (content["redirect"]) {
+				window.location.href = content["redirect"]
 			}
-		})
-		.catch((error) => {
-			console.error("Error:", error)
-			alert("An error occurred while sending the form data. Check the console for details.")
-		})
+		}
+		hideAnimation()		
+	}
+
+	if (stage == "prefetch") {
+		showAnimation()		
+	}
+
+	return content
 }
 
 //-----------------------------------------------------------------------------
 
 document.addEventListener("DOMContentLoaded", function () {
-	const form = document.getElementById("imageForm")
-
-	// Events
-	form.addEventListener("submit", function (e) {
-		e.preventDefault()
-		submitForm(form)
-	})
-
 	document.getElementById("generateSeed").addEventListener("click", function () {
 		document.getElementById("seed").value = generateRandomSeed()
 	})
-
 	window.addEventListener("resize", updateImageContainerSize)
-
 
 	// Initial setup
 	document.getElementById("seed").value = generateRandomSeed()
 	document.getElementById("image_size").addEventListener("change", updateImageContainerSize)
 	updateImageContainerSize()
+
+	// Side panel toggle
+	document.querySelector('.toggle-button').addEventListener('click', function() {
+		document.getElementById('leftColumn').classList.toggle('w-96');
+		document.getElementById('leftColumn').classList.toggle('w-12');
+		document.getElementById('imageForm').classList.toggle('block');
+		document.getElementById('imageForm').classList.toggle('hidden');
+	})
 })

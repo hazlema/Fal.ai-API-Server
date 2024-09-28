@@ -1,0 +1,8 @@
+# .prettierrc or .prettierrc.yaml
+trailingComma: "es5"
+tabWidth: 4
+html.prettier.wrapLineLength: 0
+prettier.semi: false
+singleQuote: true
+singleAttributePerLine: false
+plugins: ["prettier-plugin-tailwindcss"]

@@ -4,34 +4,47 @@
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>Login</title>
-        <link rel="stylesheet" href="public.css" />
+        <link href="default.css" rel="stylesheet" type="text/css" />
         <script src="ajax.js"></script>
-		<script>
-			function loginForm(result, id) {
-				if (result.text == "success") {
-					window.location.href = result.redirect
-				} else {
-					alert("Invalid Credentials");
+        <script>
+            function loginForm(stage, result) {
+                if (stage == "postfetch") {
+					if (result.text == "success") {
+						window.location.href = result.redirect
+					} else {
+						invalid_modal.showModal()
+					}
 				}
-			}	
-		</script>
+
+				return result;
+            }
+        </script>
     </head>
-    <body>
-        <div class="main-container">
-            <div class="form-container">
-                <form id="loginForm" fetch="true" action="/login">
-                    <div class="form-group">
-                        <label for="email">Email:</label>
-                        <input type="text" id="email" name="email" required />
-                    </div>
-                    <div class="form-group">
-                        <label for="password">Password:</label>
-                        <input type="password" id="password" name="password" required />
-                    </div>
-                    <button type="submit">Log In</button>
-                    <button type="button" onclick="window.location.href='/newuser.html'">Create Account</button>
-                </form>
-            </div>
+    <body class="h-screen flex items-center justify-center bg-base-300">
+        <div class="bg-base-100 p-8 rounded-2xl shadow-md w-full max-w-md border border-base-content/10">
+            <form id="loginForm" class="space-y-6" fetch="true" action="/login">
+                <div class="space-y-2">
+                    <label for="email">Email:</label>
+                    <input type="text" id="email" name="email" required class="w-full input input-bordered" />
+                </div>
+                <div class="space-y-2">
+                    <label for="password">Password:</label>
+                    <input type="password" id="password" name="password" required class="w-full input input-bordered" />
+                </div>
+                <div class="flex flex-col space-y-4">
+                    <button type="submit" class="w-full btn btn-primary">Log In</button>
+                    <button type="button" onclick="window.location.href='/newuser.html'" class="w-full btn btn-secondary">Create Account</button>
+                </div>
+            </form>
         </div>
+        <dialog id="invalid_modal" class="modal">
+            <div class="modal-box">
+                <form method="dialog">
+                    <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2" onclick="invalid_modal.close()">✕</button>
+                </form>
+                <h3 class="text-2xl font-bold">💥 Invalid Credentials</h3>
+                <p class="text-xl py-4">The credentials you entered are invalid</p>
+            </div>
+        </dialog>
     </body>
 </html>
