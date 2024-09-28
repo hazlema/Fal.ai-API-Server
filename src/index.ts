@@ -137,6 +137,88 @@ const jsonResponse = (result: string, extra: Record<string, string> = {}): Respo
     })
 }
 
+//--[ Endpoints ]--------------------------------------------------------------
+
+const createUserEndpoint = async (req: Request) => {
+	let form: Credentials = await req.json()
+	let res:  Response
+
+	let token = crypto.randomUUID() + "-" + crypto.randomUUID() + "-" + crypto.randomUUID()
+
+	if (!DbHelper.userExists(db, form.email)) {
+		await DbHelper.createUser(db, {
+			email: form.email,
+			password: form.password,
+			creation: new Date(),
+			token: token,
+			credits: 20,
+		})
+
+		res = jsonResponse("success", { redirect: "/app" })
+		res = serve.setCookie(res, "token", token, { maxAge: 86400, httpOnly: true })
+		return res
+	}
+
+	return jsonResponse("fail")
+}
+
+const addCreditsEndpoint = async (req: Request): Promise<Response> => {
+	let token: string = serve.getCookie(req, "token")
+	let res:  Response
+
+	if (token != "") {
+		DbHelper.adjustCredits(db, token, 20)
+
+		res = jsonResponse("success", { redirect: "/app/success.html" })
+		return res
+	}
+	return jsonResponse("fail")
+}
+
+const logonEndpoint = async (req: Request): Promise<Response> => {
+	let form: Credentials = await req.json()
+	let res:  Response
+
+	if ((await DbHelper.validateUser(db, form)) === true) {
+		let token = crypto.randomUUID() + "-" + crypto.randomUUID() + "-" + crypto.randomUUID()
+		DbHelper.updateUserToken(db, token, form.email)
+
+		res = jsonResponse("success", { redirect: "/app" })
+		res = serve.setCookie(res, "token", token, { maxAge: 86400, httpOnly: true })
+		return res
+	}
+	return jsonResponse("fail")
+}
+
+const generateImageEndpoint = async (req: Request): Promise<Response> => {
+	let form: ImageGenerationParams = await req.json()
+	let token: string = serve.getCookie(req, "token")
+
+	if (token != "") {
+		const user = DbHelper.getUserByToken(db, token)
+		if (user) {
+			console.log(`Generate request from ${user.email}`)
+		}
+			
+		console.log(JSON.stringify(form, null, 5))
+		console.log()
+
+		if (hasCredits(req, 1)) {
+			if (adjustCredits(req, -1)) {
+				const result = await runJob(form)
+				if (result) {
+					return jsonResponse("success", { image: result })
+				} else {
+					adjustCredits(req, +1)
+					return jsonResponse("fail", { redirect: "/app/error.html" })
+				}
+			}
+		}
+		return jsonResponse("fail", { redirect: "/app/nocredits.html" })
+	}
+	return jsonResponse("fail", { message: "Unauthorized" })
+}
+
 //--[ Start the server ]-------------------------------------------------------
 
 const main = async () => {
@@ -153,125 +235,44 @@ const main = async () => {
 
 			// Restrict endpoints to json only requests
 			if (req.headers.get("Content-Type") == "application/json") {
-
-				//--[ Handle Create ]----------------------------------------------
-
-				if (command == "POST create/index.html") {
-					const form: Credentials = await req.json()
-
-					let token = crypto.randomUUID() + "-" + crypto.randomUUID() + "-" + crypto.randomUUID()
-
-					if (!DbHelper.userExists(db, form.email)) {
-						await DbHelper.createUser(db, {
-							email: form.email,
-							password: form.password,
-							creation: new Date(),
-							token: token,
-							credits: 20,
-						})
-
-						let res = jsonResponse("success", { redirect: "/app" })
-						res = serve.setCookie(res, "token", token, { maxAge: 86400, httpOnly: true })
-
-						return res
-					}
-					return jsonResponse("fail")
-				}
-
-				//--[ Add Credits ]----------------------------------------------
-
-				if (command == "POST addcredits/index.html") {
-					const token = serve.getCookie(req, "token")
-
-					if (token != "") {
-						DbHelper.adjustCredits(db, token, 20)
-
-						let res = jsonResponse("success", { redirect: "/app/success.html" })
-						return res
-					}
-					return jsonResponse("fail")
-				}
-
-				//--[ Handle login ]---------------------------------------------------
-
-				if (command == "POST login/index.html") {
-					const form: Credentials = await req.json()
-
-					if ((await DbHelper.validateUser(db, form)) === true) {
-						let token = crypto.randomUUID() + "-" + crypto.randomUUID() + "-" + crypto.randomUUID()
-						DbHelper.updateUserToken(db, token, form.email)
-
-						let res = jsonResponse("success", { redirect: "/app" })
-						res = serve.setCookie(res, "token", token, { maxAge: 86400, httpOnly: true })
-
-						return res
-					}
-					return jsonResponse("fail")
-				}
-
-				//--[ Handle Image Generations ]---------------------------------------
-
-				if (command == "POST data/index.html") {
-					const form: ImageGenerationParams = await req.json()
-					const token = serve.getCookie(req, "token")
-
-					if (token != "") {
-						const user = DbHelper.getUserByToken(db, token)
-						if (user) {
-							console.log(`Generate request from ${user.email}`)
-						}
-							
-						console.log(JSON.stringify(form, null, 5))
-						console.log()
-
-						if (hasCredits(req, 1)) {
-							if (adjustCredits(req, -1)) {
-								const result = await runJob(form)
-								if (result) {
-									return jsonResponse("success", { image: result })
-								} else {
-									adjustCredits(req, +1)
-									return jsonResponse("fail", { redirect: "/app/error.html" })
-								}
-							}
-						}
-
-						return jsonResponse("fail", { redirect: "/app/nocredits.html" })
-					}
-
-					return jsonResponse("fail", { message: "Unauthorized" })
-				}
+				if (command == "POST login/index.html") 
+					return await logonEndpoint(req);
+				
+				if (command == "POST create/index.html") 
+					return await createUserEndpoint(req);
+				
+				if (command == "POST addcredits/index.html") 
+					return await addCreditsEndpoint(req);
+				
+				if (command == "POST data/index.html") 
+					return await generateImageEndpoint(req);
 			}
 
-            //--[ If they are all ready authenticated redirect to app ]------------
+			//--[ If they are all ready authenticated redirect to app ]------------
 
-            if (command == "GET public/index.html") {
-                const token = serve.getCookie(req, "token")
+			if (command == "GET public/index.html") {
+				const token = serve.getCookie(req, "token")
 
-                if (token != "" && DbHelper.tokenExists(db, token)) {
-                    return Response.redirect("/app")
-                }
-            }
-
-            //--[ Handle Web Pages ]-----------------------------------------------
+				if (token != "" && DbHelper.tokenExists(db, token))
+					return Response.redirect("/app")
+			}
+			
+			//--[ Serve Web Page ]---------------------------------------------
 
 			const htmlResponse = await serveHTML(router.path)
 
-            if (htmlResponse.status === 404) {
+			if (htmlResponse.status === 404) 
                 return Response.redirect("/404.html")
-            }
-
-            // check for token on this privileged path
-            if (router.route == "app") {
-                const token = serve.getCookie(req, "token")
-                if (token != "" && DbHelper.tokenExists(db, token)) {
-                    return htmlResponse
-                }
-                return Response.redirect("/expired.html")
-            }
-
-            return htmlResponse
-        },
+            
+			// Check if they are authenticated to access the secure path
+			if (router.route == "app") {
+				let token : string = serve.getCookie(req, "token")
+				
+				if (token == "" || !DbHelper.tokenExists(db, token)) 
+					return Response.redirect("/expired.html")
+			}
+			return htmlResponse
+        }
     })
 
     console.log()
@@ -286,5 +287,4 @@ const main = async () => {
 
 main()
 
-// TODO: Add Credits Page
 // TODO: CLI interface

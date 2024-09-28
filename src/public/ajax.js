@@ -17,7 +17,7 @@
  * 		string -> string, string -> int, string -> float
  * 		string -> boolean
  *   
- * You can hide data from being sent with the "--skip-data" attribute.
+ * You can hide data from being sent with the "data-skip" attribute.
  * 
  * Example usage:
  *
@@ -89,13 +89,15 @@ function formDataWithTypes(formName) {
 	function getAllAttr(ele) {
 		const attrFromElement = Array.from(ele.attributes).map(attr => attr.name.toLowerCase());
 		const protoProps = Object.getOwnPropertyNames(ele.__proto__).concat(Object.keys(ele));
-		return new Set([...attrFromElement, ...protoProps]);
+		const customAttrs = Array.from(ele.getAttributeNames()).map(name => name.toLowerCase());
+		
+		return new Set([...attrFromElement, ...protoProps, ...customAttrs]);
 	}
 
 	return Array.from(elements).reduce((output, ele) => {
 		const attr = getAllAttr(ele);
 
-		if (!attr.has("--skip-data") && attr.has("value") && attr.has("name")) {
+		if (!attr.has("data-skip") && attr.has("value") && attr.has("name")) {
 			let value = ele.value;
 
 			if (attr.has("type")) {

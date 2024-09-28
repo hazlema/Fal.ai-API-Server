@@ -19,6 +19,21 @@ function generateRandomSeed() {
 	return Math.floor(Math.random() * 2 ** 32)
 }
 
+function isAutoIncrement() {
+	if (document.getElementById("autoincrement").checked) {
+		let value = 0
+		try {
+			value = parseInt(document.getElementById("seed").value)
+			if (value > 2 ** 32 - 1) value = 0
+		}
+		catch (e) {
+			console.log(e)
+		}
+		
+		document.getElementById("seed").value = value + 1
+	}
+}
+
 async function loadImage(url, elem) {
 	return new Promise((resolve, reject) => {
 		elem.onload = () => resolve(elem)
@@ -32,6 +47,7 @@ async function imageForm(stage, content) {
 	if (stage == "postfetch") {
 		if (content["image"]) {
 			await loadImage(content["image"], document.getElementById("displayImage"))
+			isAutoIncrement();
 		} else {
 			if (content["redirect"]) {
 				window.location.href = content["redirect"]
