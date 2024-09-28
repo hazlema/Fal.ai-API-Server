@@ -1,22 +1,43 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Add Credits</title>
-        <link rel="stylesheet" href="/default.css" />
-        <script src="credits.js"></script>
-    </head>
-    <body>
-        <div class="main-container">
-            <div class="form-container">
-                <form id="creditsForm">
-					<div>
-						<p style="text-align: center; width: 100%;">Adding credits via payment gateway is not yet supported</p>
-					</div>
-                    <button type="submit">Add 20 Credits</button>
-                </form>
-            </div>
-        </div>
-    </body>
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Add Credits</title>
+    <link rel="stylesheet" href="/default.css" />
+    <script src="/ajax.js"></script>
+	<script>
+		function creditsForm(stage, result) {
+			if (stage == "postfetch") {
+				if (result.text == "success") {
+					window.location.href = result.redirect
+				} else {
+					invalid_modal.showModal()
+				}
+			}
+
+			return result;
+		}
+	</script>
+</head>
+<body class="h-screen w-full flex items-center justify-center bg-base-300">
+    <div class="bg-base-100 p-8 rounded-xl shadow-lg w-full max-w-md border border-base-content/10 transition-all duration-300 hover:shadow-xl">
+        <div class="text-center">
+            <h1 class="text-3xl font-bold text-base-content mb-4">Insufficient Credits</h1>
+            <p class="text-xl text-base-content/80 mb-6">Adding credits via payment gateway is not yet supported</p>
+            <form fetch="true" id="creditsForm" name="creditsForm" class="app-form-container p-5" action="/addcredits">
+				<input type="submit" value="Add 20 credits" class="btn btn-primary btn-lg transition duration-300 ease-in-out transform hover:scale-105 hover:shadow-md">
+			</form>
+		</div>
+    </div>
+	<dialog id="invalid_modal" class="modal">
+		<div class="modal-box">
+			<form method="dialog">
+				<button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2" onclick="invalid_modal.close()">✕</button>
+			</form>
+			<h3 class="text-2xl font-bold">💥 Unknown Error</h3>
+			<p class="text-xl py-4">Adding credits has failed</p>
+		</div>
+	</dialog>
+</body>
 </html>
