@@ -1,31 +1,42 @@
-# FAL.ai server written in bun
-Generate images with Flux-pro with this simple frontend written in Bun.
+# 🎨 FAL.ai Server Written in Bun
 
-## New features
+Generate stunning images with Flux-pro using this simple frontend written in Bun! 🚀
 
-- SQLite database to store user info
-- Login / Authentication 
-- Create User (no email validation message yet)
-- Expired Token Page
-- 404 Page
-- If you are authenticated already it skips the login page
-- Credits
+## ✨ New Features
 
-## Quick start
+- 📊 SQLite database to store user info
+- 🎉 Redesigned web interface
+- 🔐 Login / Authentication 
+- 💳 Credits System
+- 🔄 Last generation settings persist
 
-- Just edit the `/src/.env` file and give it your key then launch the server. `bun run server`
-- The server defaults to hostname `localhost` running on port `3000`
-- You can change that by editing the file `src/server.ts'
+## 🚀 Quick Start
 
-![web interface](./assets/web.png)
+1. Edit the `/src/.env` file and add your FAL.ai key
+2. Launch the server: `bun run server`
+3. Access the web interface at `http://localhost:3000`
 
-# Install
-- Clone/Download the repo and run `bun install`
-- If you don't have it:
-	- Get bun here: http://bun.sh/
-	- Get a Fal key here: http://fal.ai/
+> 📝 **Note:** The server defaults to hostname `localhost` running on port `3000`. You can change this by editing `src/.env`.
 
-# Running
-- Just edit the `/src/.env` file and give it your key then launch the server. `bun run server`
-- The server defaults to hostname `localhost` running on port `3000`
-- Navigate your browser to: http://localhost:3000/
+## 🖼️ Preview
+
+![Web Interface](./assets/web.png)
+![Login Screen](./assets/login.png)
+![New User Registration](./assets/newuser.png)
+
+## 🛠️ Installation
+
+1. Clone/Download the repo
+2. Run `bun install`
+
+Don't have the prerequisites? No worries!
+- 🐰 Get Bun here: [https://bun.sh/](https://bun.sh/)
+- 🔑 Get a FAL.ai key here: [https://fal.ai/](https://fal.ai/)
+
+## 🏃‍♂️ Running the Server
+
+1. Edit the `/src/.env` file and add your FAL.ai key
+2. Launch the server: `bun run server`
+3. Open your browser and navigate to: [http://localhost:3000/](http://localhost:3000/)
+
+Happy image generating! 🎨✨
