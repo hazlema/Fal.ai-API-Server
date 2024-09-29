@@ -57,22 +57,42 @@ async function imageForm(stage, content) {
 	}
 
 	if (stage == "prefetch") {
+		// Show the marvelous SVG animation
 		showAnimation()		
 	}
 
 	return content
 }
 
+function loadLocalStorage() {
+	Object.keys(localStorage).forEach((key) => {
+		if (document.getElementById(key)) {
+			value = localStorage.getItem(key)
+
+			if (value == "true" || value == "false") {
+				document.getElementById(key).checked = value
+			} else {
+				document.getElementById(key).value = value + ""
+			}
+		}
+	})
+}
+
 //-----------------------------------------------------------------------------
 
 document.addEventListener("DOMContentLoaded", function () {
+	// Load saved settings
+	loadLocalStorage()
+
+	// Initial setup
 	document.getElementById("generateSeed").addEventListener("click", function () {
 		document.getElementById("seed").value = generateRandomSeed()
 	})
 	window.addEventListener("resize", updateImageContainerSize)
 
-	// Initial setup
-	document.getElementById("seed").value = generateRandomSeed()
+	if (document.getElementById("seed").value == "")
+		document.getElementById("seed").value = generateRandomSeed()
+	
 	document.getElementById("image_size").addEventListener("change", updateImageContainerSize)
 	updateImageContainerSize()
 
@@ -83,4 +103,5 @@ document.addEventListener("DOMContentLoaded", function () {
 		document.getElementById('imageForm').classList.toggle('block');
 		document.getElementById('imageForm').classList.toggle('hidden');
 	})
+
 })

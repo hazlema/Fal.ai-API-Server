@@ -97,8 +97,9 @@ function formDataWithTypes(formName) {
 	return Array.from(elements).reduce((output, ele) => {
 		const attr = getAllAttr(ele);
 
-		if (!attr.has("data-skip") && attr.has("value") && attr.has("name")) {
+		if (attr.has("value") && attr.has("name")) {
 			let value = ele.value;
+			let key   = ele.name || ele.id;
 
 			if (attr.has("type")) {
 				switch (ele.type) {
@@ -116,7 +117,11 @@ function formDataWithTypes(formName) {
 				}
 			}
 
-			output[ele.name] = value;
+			if (form.hasAttribute("data-save")) 
+				localStorage.setItem(key, value)
+
+			if (!attr.has("data-skip"))
+				output[key] = value;
 		}
 
 		return output;
