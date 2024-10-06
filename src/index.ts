@@ -37,7 +37,7 @@ const initDb = async () => {
  */
 const runJob = async (form: ImageGenerationParams): Promise<string | null> => {
     try {
-        const result: FalAIResponse = await Fal.subscribe('fal-ai/flux-pro', {
+        const result: FalAIResponse = await Fal.subscribe('fal-ai/flux-pro/v1.1', {
             input: {
                 prompt: form.prompt,
                 image_size: form.image_size,
