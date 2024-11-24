@@ -4,6 +4,7 @@ Generate stunning images with Flux-pro using this simple frontend written in Bun
 
 ## ✨ New Features
 
+- 💥 Added support for Flux Schnell, Dev, Pro or Ultra
 - 💥 Updated to use Flux-Pro v1.1
 - 📊 SQLite database to store user info
 - 🎉 Redesigned web interface

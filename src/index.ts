@@ -29,6 +29,40 @@ const initDb = async () => {
     }
 };
 
+const selectEndpoint = (form: ImageGenerationParams): string => {
+    // fal-ai/flux/schnell
+    // fal-ai/flux/dev
+    // fal-ai/flux-pro/v1.1
+    // fal-ai/flux-pro/v1.1-ultra
+
+    var modal: string = 'fal-ai/flux-pro/v1.1';
+
+    switch (form.modal) {
+        case 'schnell':
+            modal = 'fal-ai/flux/schnell';
+            break;
+
+        case 'dev':
+            modal = 'fal-ai/flux/dev';
+            break;
+
+        case 'pro':
+            modal = 'fal-ai/flux-pro/v1.1';
+            break;
+
+        case 'ultra':
+            modal = 'fal-ai/flux-pro/v1.1-ultra';
+            break;
+
+        default:
+            modal = 'fal-ai/flux-pro/v1.1';
+            break;
+    }
+
+    console.log(`API Endpoint: ${modal}`); 
+	return modal;
+};
+
 /**
  * Submits a job to the Fal AI server to generate an image based on the provided parameters.
  *
@@ -37,7 +71,9 @@ const initDb = async () => {
  */
 const runJob = async (form: ImageGenerationParams): Promise<string | null> => {
     try {
-        const result: FalAIResponse = await Fal.subscribe('fal-ai/flux-pro/v1.1', {
+        var modal: string = selectEndpoint(form);
+
+        const result: FalAIResponse = await Fal.subscribe(modal, {
             input: {
                 prompt: form.prompt,
                 image_size: form.image_size,

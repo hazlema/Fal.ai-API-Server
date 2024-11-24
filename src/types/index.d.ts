@@ -26,6 +26,7 @@ type ImageGenerationParams = {
     image_size: ImageSize
     seed: number
     guidance: number
+	modal: string
 }
 
 interface RouteResult {
